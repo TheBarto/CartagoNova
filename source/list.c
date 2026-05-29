@@ -1,1 +1,0 @@
-/home/angel/Documentos/List/source/list.c

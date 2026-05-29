@@ -1,1 +1,0 @@
-/home/angel/Documentos/List/include/list.h
