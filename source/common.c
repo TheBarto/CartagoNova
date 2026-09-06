@@ -323,7 +323,7 @@ pwm_t pwm_table[] = {
   { NULL, 0, 0, 0, NULL, NULL, NULL, NULL, NULL }
 };
 
-inline uint8_t lookup_gpio_by_key(const char *key)
+static inline uint16_t lookup_gpio_by_key(const char *key)
 {
 	for (pins_t *p = table; p->key != NULL; ++p) {
 		if (strcmp(p->key, key) == 0) {
@@ -333,7 +333,7 @@ inline uint8_t lookup_gpio_by_key(const char *key)
 	return 0;
 }
 
-inline uint8_t lookup_gpio_by_name(const char *name)
+static inline uint16_t lookup_gpio_by_name(const char *name)
 {
 	for (pins_t *p = table; p->name != NULL; ++p) {
 		if (strcmp(p->name, name) == 0) {
@@ -343,7 +343,7 @@ inline uint8_t lookup_gpio_by_name(const char *name)
 	return 0;
 }
 
-inline int8_t lookup_ain_by_key(const char *key)
+static inline int8_t lookup_ain_by_key(const char *key)
 {
 	for (pins_t *p = table; p->key != NULL; ++p) {
 		if (strcmp(p->key, key) == 0) {
@@ -357,7 +357,7 @@ inline int8_t lookup_ain_by_key(const char *key)
 	return -1;
 }
 
-int lookup_ain_by_name(const char *name)
+static inline uint8_t lookup_ain_by_name(const char *name)
 {
 	for (pins_t *p = table; p->name != NULL; ++p) {
 		if (strcmp(p->name, name) == 0) {
@@ -371,7 +371,7 @@ int lookup_ain_by_name(const char *name)
 	return -1;
 }
 
-inline BBIO_err lookup_uart_by_name(const char *input_name, char *dt)
+static inline BBIO_err lookup_uart_by_name(const char *input_name, char *dt)
 {
 	for (uart_t *p = uart_table; p->name != NULL; ++p) {
 		if (strcmp(p->name, input_name) == 0) {
@@ -383,7 +383,7 @@ inline BBIO_err lookup_uart_by_name(const char *input_name, char *dt)
 	return BBIO_INVARG;
 }
 
-BBIO_err copy_pwm_key_by_key(const char *input_key, char *key)
+static inline BBIO_err copy_pwm_key_by_key(const char *input_key, char *key)
 {
     pins_t *p;
     for (p = table; p->key != NULL; ++p) {
@@ -417,7 +417,7 @@ BBIO_err get_pwm_key_by_name(const char *name, char *key)
     return BBIO_INVARG;
 }
 
-BBIO_err get_gpio_number(const char *key, unsigned int *gpio)
+BBIO_err get_gpio_number(const char *key, uint16_t *gpio)
 {
     *gpio = lookup_gpio_by_key(key);
     

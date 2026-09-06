@@ -116,7 +116,7 @@ extern int gpio_direction[120];
 extern char ctrl_dir[CTRL_DIR_MAX];
 extern char ocp_dir[OCP_DIR_MAX];
 
-BBIO_err get_gpio_number(const char *key, unsigned int *gpio);
+BBIO_err get_gpio_number(const char *key, uint16_t *gpio);
 BBIO_err get_pwm_key(const char *input, char *key);
 BBIO_err get_adc_ain(const char *key, int *ain);
 BBIO_err get_uart_device_tree_name(const char *name, char *dt);

@@ -39,6 +39,7 @@ typedef struct {
 	uint8_t motor_pin[MAX_SIZE_PIN_NAME];
 	uint8_t folder[MAX_SIZE_FOLDER_NAME];
 	uint8_t electrovals_pins[MAX_TOTAL_ELECTROVALS][MAX_SIZE_PIN_NAME];
+	uint8_t total_pins_read;
 	uint8_t total_nodes_read;
 	queue_b_t capture_config_vals;
 	stack_b_t free_nodes;

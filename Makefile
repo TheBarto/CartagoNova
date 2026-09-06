@@ -10,5 +10,5 @@ event_gpio.o: source/event_gpio.c source/common.c source/gpio.c source/c_pinmux.
 uart.o: source/c_uart.c source/common.c
 	gcc -Iinclude/ -c c_uart.o source/c_uart.c source/common.c
 
-main: main.c source/file_conf.c
-	gcc -Iinclude/ -o main main.c source/file_conf.c
+main: main.c source/file_conf.c list.o source/event_gpio.c source/c_pwm.c source/common.c source/c_pinmux.c source/c_adc.c
+	gcc -g -Iinclude/ -o $@ $^

@@ -31,6 +31,7 @@ SOFTWARE.
 #define EVENT_GPIO_H
 
 #include "error.h"
+#include "common.h"
 
 #define NO_EDGE      0
 #define RISING_EDGE  1
@@ -60,8 +61,8 @@ SOFTWARE.
 #define PUD_DOWN 1
 #define PUD_UP   2
 
-BBIO_err gpio_export(unsigned int gpio);
-BBIO_err gpio_unexport(unsigned int gpio);
+//BBIO_err gpio_export(unsigned int gpio);
+//BBIO_err gpio_unexport(unsigned int gpio);
 void exports_cleanup(void);
 BBIO_err gpio_set_direction(unsigned int gpio, unsigned int in_flag);
 BBIO_err gpio_get_direction(unsigned int gpio, unsigned int *value);
@@ -79,5 +80,11 @@ int gpio_is_evented(unsigned int gpio);
 int event_initialise(void);
 void event_cleanup(void);
 int blocking_wait_for_edge(unsigned int gpio, unsigned int edge, int timeout);
+
+int8_t gpio_setup(char *channel,
+                  GPIO_Direction direction,
+                  GPIO_Resistor pud,
+                  uint8_t initial,
+                  uint8_t delay);
 
 #endif

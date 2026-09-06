@@ -4,24 +4,33 @@
 #include <EN_defines.h>
 
 #include <stdio.h>
+#include <time.h>
+#include <unistd.h>
 
+#include <common.h>
+#include <c_adc.h>
+#include <event_gpio.h>
+#include <c_pwm.h>
 
-
+#include <queue.h>
+#include <stack.h>
 
 void captura_muestra(capture_conf_t *capt, uint8_t *pin_sensor, uint8_t tsub, uint8_t nss)
 {
-	close_all_electrovals();
-	open_electrovals(capt->vals, capt->tota_vals);
+	printf("Cerramos todas las electrovalvulas\n");
+	//close_all_electrovals();
+	printf("Abrir las electrovalvulas que queramos\n");
+	//open_electrovals(capt->vals, capt->tota_vals);
 
-	for(uint8_t i = 0; i < capt->n_stimulus; i++) {
-		//time_ini
-		//adc_read(pin_sensor);
+	time_t time1;
+	float value_readed = 0;
+	for(uint8_t i = 0; i < capt->stimulus; i++) {
+		time(&time1);
 		for(uint8_t j = 0; j < nss; j++) {
-			//adc_read(pin_sensor);
-			//time_sleep(tsub);
+			adc_read_value(pin_sensor, &value_readed, 0);
+			usleep(tsub);
 		}
-		//time_end
-		//sleep(time_end-time_ini);
+		usleep(difftime(time(NULL), time1));
 	}
 
 	return;
@@ -45,7 +54,7 @@ int main(int argc, char *argv[])
 	int8_t r = read_config_file("file_test.txt", &b);
 
 	node_b_t *node_b = NULL;
-	for(uint8_t i = 0; i < 7; i++) {
+	for(uint8_t i = 0; i < 4; i++) {
 		list_get_b_node(&b.capture_config_vals,
 		                i,
 		                &node_b,
@@ -65,17 +74,24 @@ int main(int argc, char *argv[])
 	// Iniciamos las electrovalvulas.
 	//GPIO.setup(elec, GPIO.OUT);
 	for (uint8_t i = 0; i < MAX_TOTAL_ELECTROVALS; i++) {
-		gpio_setup(b.electrovalvulas[i], GPIO_Direction.Output, GPIO_Resistor.PullDown, 0, 0);
+		/*gpio_setup(b.electrovals_pins[i],
+		           Output,
+		           PullDown,
+		           0,
+		           0);*/
+		printf("Incializamos GPIO: %s\n", b.electrovals_pins[i]);
 	}
 
 
 	//PWM.start - Al iniciar la captura
-	pwm_start_channel(b.motor_pin, 100.0, 2000.0, PWM_Polarity.Normal);
+	//pwm_start_channel(b.motor_pin, 100.0, 2000.0, Normal);
+	printf("Iniciamos el PWM del motor\n");
 
 	//PWM.stop
-	pwm_stop_channel(b.motor_pin);
+	//pwm_stop_channel(b.motor_pin);
+	printf("Paramos el PWM del motor\n");
 
-	for(uint8_t i = 0; i < b->total_nodes_read; i++) {
+	for(uint8_t i = 0; i < b.total_nodes_read; i++) {
 		//queue_b_queue_get();
 	}
 }

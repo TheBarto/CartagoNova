@@ -22,33 +22,38 @@ static void parse_value(void *dst, uint8_t size_dst, uint8_t *src, uint8_t size_
 		case 4:
 			*((uint32_t *)dst) = (uint32_t)dst_val;
 			break;
+		default:
+			printf("ERROR 3");
+			break;
 	}
 	return;
 }
 
 // USE THIS FUNCTION FOR BOTH TRANSFORMATIONS
-static void parse_electrovals_pins(uint8_t *pins, uint8_t *stream, uint8_t parse)
+static uint8_t parse_electrovals_pins(uint8_t *pins, uint8_t *stream, uint8_t parse)
 {
 	uint8_t* ptr_str = stream;
+	uint8_t total_pins = 0;
 	while(*ptr_str != '\n') {
 		if(*ptr_str == ',') {
 			if(parse == 0) {
 				memcpy(pins, stream, sizeof(*stream)*(ptr_str-stream));
-				pins+=(sizeof(*stream)*(ptr_str-stream));
+				pins+=(sizeof(*stream) * MAX_SIZE_PIN_NAME);
 			} else {
 				*pins = *stream-'0';
 				pins++;
 			}
 			stream = (ptr_str + 1);
+			total_pins++;
 		}
 		ptr_str++;
 	}
 	if(parse == 0)
-		memcpy(pins, stream, sizeof(*stream)*(ptr_str-stream));
+		memcpy(pins, stream, sizeof(*stream)*((ptr_str-1)-stream));
 	else
 		*pins = *stream-'0';
 
-	return;
+	return total_pins;
 }
 
 static int analize_board_conf(uint8_t *stream, uint32_t size, board_conf_t *board)
@@ -69,20 +74,22 @@ static int analize_board_conf(uint8_t *stream, uint32_t size, board_conf_t *boar
 				case 7: memcpy(&board->motor_pin, stream, sizeof(*stream)*(aux_ptr-stream)); break;
 				case 8: parse_value(&board->TH_capture_time, sizeof(board->TH_capture_time), stream, (aux_ptr-stream)); break;
 				case 9: memcpy(&board->folder, stream, sizeof(*stream)*(aux_ptr-stream)); break;
+				case 10: board->total_pins_read = parse_electrovals_pins(&board->electrovals_pins[0][0], stream, 0); break;
+				default: printf("ERROR 1\n"); return -1;
 			}
 			pos++;
 			stream = (aux_ptr + 1);
 		}
 		aux_ptr++;
 	}
-	parse_electrovals_pins(&board->electrovals_pins[0][0], stream, 0);
+
 	printf("VALORES OBTENIDOS CONFIGURACION: \n");
 	printf("VALOR RESISTENCIA: %d\nN_SUBMUESTRAS: %d\n", board->res_val, board->n_subsamples);
 	printf("TIEMPO CAPTURA SUBMUESTRAS: %d\nPIN SENSOR: %s\n", board->n_subsamples_capt_time, board->sensor_pin);
 	printf("VOLTAJE SENSOR: %d\nLIMITE VOLTAJE PLACA: %d\n", board->sensor_volt, board->board_limit_volt);
 	printf("PIN TyH: %s\nPIN MOTOR: %s\n", board->TH_pin, board->motor_pin);
 	printf("TIEMPO CAPTURA TyH: %d\nCARPETA: %s\n", board->TH_capture_time, board->folder);
-	for(uint8_t i = 0; i < 4; i++)
+	for(uint8_t i = 0; i < board->total_pins_read; i++)
 		printf("PIN VALVULAS[%d] = %s\n", i, board->electrovals_pins[i]);
 	return 0;
 }
@@ -102,14 +109,15 @@ static int analize_capture_conf(uint8_t *stream, uint32_t size, board_conf_t *bo
 				case 1: parse_value(&node->sensor_heat, sizeof(node->sensor_heat), stream, (aux_ptr-stream)); break;
 				case 2: parse_value(&node->motor_suction, sizeof(node->motor_suction), stream, (aux_ptr-stream)); break;
 				case 3: parse_value(&node->total_vals, sizeof(node->total_vals), stream, (aux_ptr-stream)); break;
-				case 4: break;
+				case 4: parse_electrovals_pins(node->vals, stream, 1); break;
+				default: printf("ERROR 2\n"); return -1;
 			}
 			pos++;
 			stream = (aux_ptr + 1);
 		}
 		aux_ptr++;
 	}
-	parse_electrovals_pins(node->vals, stream, 1);
+
 	queue_b_queue_value(&board->capture_config_vals, node_b);
 	printf("VALORES OBTENIDOS: \n");
 	printf("ESTIMULO: %d\nTEMPERATURA SENSOR(%): %d\n", node->stimulus, node->sensor_heat);

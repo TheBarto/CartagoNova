@@ -41,6 +41,7 @@ SOFTWARE.
 
 #include "event_gpio.h"
 #include "common.h"
+#include "c_pinmux.h"
 
 #define GPIO_NOT_EXPORTED 0
 #define GPIO_EXPORTED 1
@@ -88,7 +89,7 @@ static BBIO_err gpio_export(unsigned int gpio)
 
     // Is GPIO an LED?
     if ( ((gpio >= USR_LED_GPIO_MIN) && (gpio <=  USR_LED_GPIO_MAX)) 
-         ||
+         /*||
          ( beaglebone_blue() 
            &&
            ( 
@@ -100,7 +101,7 @@ static BBIO_err gpio_export(unsigned int gpio)
              || (gpio == BAT100)
              || (gpio == WIFI)
            ) 
-         )
+         ) */
        )
     {
         syslog(LOG_WARNING, "Adafruit_BBIO: gpio_export: %u not applicable to built-in LEDs", gpio);
@@ -220,7 +221,7 @@ int open_value_file(unsigned int gpio)
     // create file descriptor of value file
     if ((gpio >= USR_LED_GPIO_MIN) && (gpio <=  USR_LED_GPIO_MAX)) {
         snprintf(filename, sizeof(filename), "/sys/class/leds/beaglebone:green:usr%d/brightness", gpio -  USR_LED_GPIO_MIN);
-    } else if (beaglebone_blue()) {
+    /* } else if (beaglebone_blue()) {
         //syslog(LOG_DEBUG, "Adafruit_BBIO: gpio open_value_file: beaglebone_blue() is true\n");
         switch(gpio) {
             case USR_LED_RED:
@@ -247,7 +248,7 @@ int open_value_file(unsigned int gpio)
             default:
                 snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/value", gpio);
                 break;
-        }
+        }*/
     } else {
         //syslog(LOG_DEBUG, "Adafruit_BBIO: gpio open_value_file: default gpio path\n");
         snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/value", gpio);
@@ -314,7 +315,7 @@ BBIO_err gpio_set_direction(unsigned int gpio, unsigned int in_flag)
         char direction[10] = { 0 };
 
         if ( ((gpio >= USR_LED_GPIO_MIN) && (gpio <=  USR_LED_GPIO_MAX)) 
-             ||
+             /*||
              ( beaglebone_blue() 
                &&
                ( 
@@ -326,7 +327,7 @@ BBIO_err gpio_set_direction(unsigned int gpio, unsigned int in_flag)
                  || (gpio == BAT100)
                  || (gpio == WIFI)
                ) 
-             )
+             )*/
            )
         {
             syslog(LOG_WARNING, "Adafruit_BBIO: gpio_set_direction: %u not applicable to built-in LEDs", gpio);
@@ -429,7 +430,7 @@ BBIO_err gpio_set_value(unsigned int gpio, unsigned int value)
         if (access(filename, W_OK) < 0) {
            snprintf(filename, sizeof(filename), "/sys/class/leds/beaglebone:green:%s/brightness", usr_led_trigger[led]);
         }
-    } else if (beaglebone_blue()) {
+    /* } else if (beaglebone_blue()) {
         //syslog(LOG_DEBUG, "Adafruit_BBIO: gpio_set_value: beaglebone_blue() is true\n");
         switch(gpio) {
             case USR_LED_RED:
@@ -456,7 +457,7 @@ BBIO_err gpio_set_value(unsigned int gpio, unsigned int value)
             default:
                 snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/value", gpio);
                 break;
-        }
+        } */
     } else {
         //syslog(LOG_DEBUG, "Adafruit_BBIO: gpio_set_value: default gpio path\n");
         snprintf(filename, sizeof(filename), "/sys/class/gpio/gpio%d/value", gpio);
@@ -927,7 +928,11 @@ static inline uint8_t init_module(void)
 	return 0;
 }
 
-int8_t gpio_setup(char *channel, GPIO_Direction direction, GPIO_Resistor pud, uint8_t initial, uint8_t delay) {
+int8_t gpio_setup(char *channel,
+                  GPIO_Direction direction,
+                  GPIO_Resistor pud,
+                  uint8_t initial,
+                  uint8_t delay) {
 
 	if (!module_setup) {
 		init_module();
@@ -946,7 +951,7 @@ int8_t gpio_setup(char *channel, GPIO_Direction direction, GPIO_Resistor pud, ui
 		return -1;
 	}
 
-	unsigned int gpio;
+	uint16_t gpio;
 	BBIO_err err = get_gpio_number(channel, &gpio);
 	if (err != BBIO_OK)
 		return -1;
