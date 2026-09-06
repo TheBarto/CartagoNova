@@ -89,10 +89,42 @@ int main(int argc, char *argv[])
 
 	//PWM.stop
 	//pwm_stop_channel(b.motor_pin);
-	printf("Paramos el PWM del motor\n");
+	//printf("Paramos el PWM del motor\n");
+	printf("PWM del sensor al 100% e iniciar o setear el ADC\n");
 
 	for(uint8_t i = 0; i < b.total_nodes_read; i++) {
-		//queue_b_queue_get();
+		queue_b_unqueue_value(&b.capture_config_vals, &node_b);
+		node = (capture_conf_t *)get_struct_by_elem(node_b, capture_conf_t, node);
+
+		printf("Cerramos todas las electrovalvulas que tengamos\n");
+
+		printf("Abrimos las electrovalvulas que necesitemos\n");
+		// CAPTURA DE UN ODORANTE
+		for(uint8_t j = 0; j < stimulus; j++) {
+			printf("Cogemos una muestra temporal\n");
+			printf("Leemos del ADC -> supone que hay un bug y la medida es errónea\n");
+
+			/* Cogemos para el total de submuestras (NM) que generará una muestra.
+			   Una muestra está formada por una media de varias submuestras, no
+			   de una sola lectura */
+			for(uint8_t k = 0; k < b.n_subsamples; k++) {
+				printf("Leemos valores del ADC y los sumamos todos en una variable\n");
+				printf("Dormimos(sleep) un total de b.n_subsamples_capt_time/b.subsamples\n");
+				/* Dormir un tiempo. El periodo de captura de una muestra esta almacenado
+				 * en la variable b.n_subsamples_capt_time, y el total de submuestras que
+				 * conforma una muestra está en subsamples. Hay que dividir el tiempo
+				 * maximo entre el numero de capturas.
+				 */
+			}
+			printf("Una vez obtenidas las submuestras, dividimos entre el total de submuestras\n
+					y obtenemos el valor de la medida\n");
+			printf("Calculamos la resistencia interna del sensor con la formula especifica\n");
+			printf("Guardamos/mostramos los datos obtenidos\n");
+			printf("Totamos otra muestra temporal y la restamos a la inicial, \n
+					para saber el tiempo empleado en esta operacion\n");
+		}
+		printf("Con el tiempo empleado obtenido, restamos el tiempo de captura de UNA MUESTRA (no submuestra) al tiempo\n
+				que hemos tardado en capturar la muestra (creo que no marcado)\n");
 	}
 }
 
