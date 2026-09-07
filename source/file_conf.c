@@ -52,6 +52,7 @@ static uint8_t parse_electrovals_pins(uint8_t *pins, uint8_t *stream, uint8_t pa
 		memcpy(pins, stream, sizeof(*stream)*((ptr_str-1)-stream));
 	else
 		*pins = *stream-'0';
+	total_pins++;
 
 	return total_pins;
 }
@@ -59,6 +60,7 @@ static uint8_t parse_electrovals_pins(uint8_t *pins, uint8_t *stream, uint8_t pa
 static int analize_board_conf(uint8_t *stream, uint32_t size, board_conf_t *board)
 {
 	stream++;
+
 	uint8_t *aux_ptr = stream;
 	uint8_t pos = 0;
 	while(*aux_ptr != '\n') {
@@ -120,10 +122,11 @@ static int analize_capture_conf(uint8_t *stream, uint32_t size, board_conf_t *bo
 
 	queue_b_queue_value(&board->capture_config_vals, node_b);
 	printf("VALORES OBTENIDOS: \n");
-	printf("ESTIMULO: %d\nTEMPERATURA SENSOR(%): %d\n", node->stimulus, node->sensor_heat);
+	printf("ESTIMULO: %d\nTEMPERATURA SENSOR(%%): %d\n", node->stimulus, node->sensor_heat);
 	printf("SUCCION MOTOR: %d\nTOTAL ELECTROVALVULAS: %d\n", node->motor_suction, node->total_vals);
 	for(uint8_t i = 0; i < node->total_vals; i++)
 		printf("VALVULA[%d] = %d\n", i, node->vals[i]);
+	board->total_nodes_read++;
 	return 0;
 }
 
@@ -138,7 +141,6 @@ int8_t read_config_file(uint8_t *name, board_conf_t *board)
 	if(fd == -1)
 		return -1;
 
-	memset(board, 0, sizeof(board));
 	do {
 		data_r = read(fd, &data[0], sizeof(uint8_t)*512);
 		// SI ERROR HAY QUE CERRAR TODO

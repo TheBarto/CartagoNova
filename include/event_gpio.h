@@ -86,5 +86,6 @@ int8_t gpio_setup(char *channel,
                   GPIO_Resistor pud,
                   uint8_t initial,
                   uint8_t delay);
+int8_t gpio_output(char *channel, GPIO_Output output);
 
 #endif

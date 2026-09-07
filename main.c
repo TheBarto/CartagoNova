@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
 
 	printf("Comenzamos main\n");
 
+	memset(&b, 0, sizeof(b));
+
 	stack_b_init_stack(&b.free_nodes);
 	queue_b_init_queue(&b.capture_config_vals);
 	for(uint8_t i = 0; i < MAX_NUMBER_NODES; i++) {
@@ -54,6 +56,7 @@ int main(int argc, char *argv[])
 	int8_t r = read_config_file("file_test.txt", &b);
 
 	node_b_t *node_b = NULL;
+	capture_conf_t *node = NULL;
 	for(uint8_t i = 0; i < 4; i++) {
 		list_get_b_node(&b.capture_config_vals,
 		                i,
@@ -61,18 +64,18 @@ int main(int argc, char *argv[])
 		                0);
 
 		printf(" VALORES OBTENIDOS DESPUES ");
-		capture_conf_t *node = (capture_conf_t *)get_struct_by_elem(node_b, capture_conf_t, node);
+		node = (capture_conf_t *)get_struct_by_elem(node_b, capture_conf_t, node);
 
 		printf("VALORES OBTENIDOS: \n");
 		printf("-------------------------\n");
-		printf("ESTIMULO: %d\nTEMPERATURA SENSOR(%): %d\n", node->stimulus, node->sensor_heat);
+		printf("ESTIMULO: %d\nTEMPERATURA SENSOR(%%): %d\n", node->stimulus, node->sensor_heat);
 		printf("SUCCION MOTOR: %d\nTOTAL ELECTROVALVULAS: %d\n", node->motor_suction, node->total_vals);
 		for(uint8_t i = 0; i < node->total_vals; i++)
 			printf("VALVULA[%d] = %d\n", i, node->vals[i]);
 	}
 
+	return 0;
 	// Iniciamos las electrovalvulas.
-	//GPIO.setup(elec, GPIO.OUT);
 	for (uint8_t i = 0; i < MAX_TOTAL_ELECTROVALS; i++) {
 		/*gpio_setup(b.electrovals_pins[i],
 		           Output,
@@ -88,43 +91,76 @@ int main(int argc, char *argv[])
 	printf("Iniciamos el PWM del motor\n");
 
 	//PWM.stop
-	//pwm_stop_channel(b.motor_pin);
-	//printf("Paramos el PWM del motor\n");
-	printf("PWM del sensor al 100% e iniciar o setear el ADC\n");
+	printf("Iniciar/setear el ADC\n");
+	//adc_setup();
 
 	for(uint8_t i = 0; i < b.total_nodes_read; i++) {
 		queue_b_unqueue_value(&b.capture_config_vals, &node_b);
 		node = (capture_conf_t *)get_struct_by_elem(node_b, capture_conf_t, node);
 
-		printf("Cerramos todas las electrovalvulas que tengamos\n");
+		printf("PWM del sensor al %d%%\n", node->sensor_heat);
+		//pwm_set_channel_duty_cycle(b.sensor_pin, node->sensor_heat);
+
+		printf("PWM del motor al %d%%\n", node->motor_suction);
+		//pwm_set_channel_duty_cycle(b.motor_pin, node->sensor_heat);
+
+		printf("Cerramos todas las electrovalvulas que tengamos: %d\n", b.total_pins_read);
+		for(uint8_t j = 0; j < b.total_pins_read; j++) {
+			printf("GPIO: %s\n", b.electrovals_pins[j]);
+			//gpio_output(b.electrovals_pins[j], Low);
+		}
 
 		printf("Abrimos las electrovalvulas que necesitemos\n");
+		for(uint8_t j = 0; j < node->total_vals; j++) {
+			printf("GPIO: %s\n", b.electrovals_pins[node->vals[j]]);
+			//gpio_output(b.electrovals_pins[j], High);
+		}
+
 		// CAPTURA DE UN ODORANTE
-		for(uint8_t j = 0; j < stimulus; j++) {
+		double tsub = (double)b.n_subsamples_capt_time / (double)b.n_subsamples;
+		for(uint8_t j = 0; j < node->stimulus; j++) {
+
 			printf("Cogemos una muestra temporal\n");
+			time_t time1;
+			time(&time1);
+
 			printf("Leemos del ADC -> supone que hay un bug y la medida es errónea\n");
+			float value_readed = 0.0;
+			float measure_readed = 0.0;
+
+			//adc_read_value(b.sensor_pin, &value_readed, 0);
 
 			/* Cogemos para el total de submuestras (NM) que generará una muestra.
 			   Una muestra está formada por una media de varias submuestras, no
 			   de una sola lectura */
 			for(uint8_t k = 0; k < b.n_subsamples; k++) {
-				printf("Leemos valores del ADC y los sumamos todos en una variable\n");
-				printf("Dormimos(sleep) un total de b.n_subsamples_capt_time/b.subsamples\n");
+				//printf("Leemos valores del ADC y los sumamos todos en una variable\n");
+				//adc_read_value(b.sensor_pin, &value_readed, 0);
+				measure_readed+=value_readed;
+
+				//printf("Dormimos(sleep) un total de b.n_subsamples_capt_time/b.subsamples: %f\n", tsub);
+				usleep(tsub);
 				/* Dormir un tiempo. El periodo de captura de una muestra esta almacenado
 				 * en la variable b.n_subsamples_capt_time, y el total de submuestras que
 				 * conforma una muestra está en subsamples. Hay que dividir el tiempo
 				 * maximo entre el numero de capturas.
 				 */
 			}
-			printf("Una vez obtenidas las submuestras, dividimos entre el total de submuestras\n
-					y obtenemos el valor de la medida\n");
+			printf("Una vez obtenidas las submuestras, dividimos entre el total de submuestras\n y obtenemos el valor de la medida\n");
+			measure_readed/=b.n_subsamples;
+
 			printf("Calculamos la resistencia interna del sensor con la formula especifica\n");
+			float resistance = (((b.sensor_volt*b.res_val)/(measure_readed/1000.0))-b.res_val);
+
 			printf("Guardamos/mostramos los datos obtenidos\n");
-			printf("Totamos otra muestra temporal y la restamos a la inicial, \n
-					para saber el tiempo empleado en esta operacion\n");
+			printf("Totamos otra muestra temporal y la restamos a la inicial, \npara saber el tiempo empleado en esta operacion\n");
+			time_t time2;
+			time(&time2);
+			printf("time1: %ld --- time2: %ld\n", time1, time2);
+			printf("Difftime entre capturas: %f\n", difftime(time2, time1));
+
 		}
-		printf("Con el tiempo empleado obtenido, restamos el tiempo de captura de UNA MUESTRA (no submuestra) al tiempo\n
-				que hemos tardado en capturar la muestra (creo que no marcado)\n");
+		printf("Con el tiempo empleado obtenido, restamos el tiempo de captura de UNA MUESTRA (no submuestra) al tiempo\n que hemos tardado en capturar la muestra (creo que no marcado)\n");
 	}
 }
 
