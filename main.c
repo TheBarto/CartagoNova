@@ -36,10 +36,19 @@ void captura_muestra(capture_conf_t *capt, uint8_t *pin_sensor, uint8_t tsub, ui
 	return;
 }
 
-
 static void gpio_main_simple_test()
 {
 	board_conf_t b;
+
+	memset(&b, 0, sizeof(b));
+
+	stack_b_init_stack(&b.free_nodes);
+	queue_b_init_queue(&b.capture_config_vals);
+	for(uint8_t i = 0; i < MAX_NUMBER_NODES; i++) {
+		memset(&b.nodes[i], 0, sizeof(capture_conf_t));
+		stack_b_stack_value(&b.free_nodes, &b.nodes[i].node);
+	}
+
 	int8_t r = read_config_file("file_test.txt", &b);
 
 	for (uint8_t i = 0; i < MAX_TOTAL_ELECTROVALS; i++) {
@@ -56,7 +65,6 @@ static void gpio_main_simple_test()
 	gpio_output(b.electrovals_pins[2], High);
 	gpio_output(b.electrovals_pins[3], Low);
 }
-
 
 static int pure_capture_main()
 {

@@ -142,6 +142,7 @@ int8_t read_config_file(uint8_t *name, board_conf_t *board)
 		return -1;
 
 	do {
+		memset(data, 0, sizeof(data));
 		data_r = read(fd, &data[0], sizeof(uint8_t)*512);
 		// SI ERROR HAY QUE CERRAR TODO
 		if(data_r == -1)
