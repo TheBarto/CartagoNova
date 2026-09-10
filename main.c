@@ -37,9 +37,30 @@ void captura_muestra(capture_conf_t *capt, uint8_t *pin_sensor, uint8_t tsub, ui
 }
 
 
-
-int main(int argc, char *argv[])
+static void gpio_main_simple_test()
 {
+	board_conf_t b;
+	int8_t r = read_config_file("file_test.txt", &b);
+
+	for (uint8_t i = 0; i < MAX_TOTAL_ELECTROVALS; i++) {
+		gpio_setup(b.electrovals_pins[i],
+		           Output,
+		           PullDown,
+		           0,
+		           0);
+		printf("Incializamos GPIO: %s\n", b.electrovals_pins[i]);
+	}
+
+	gpio_output(b.electrovals_pins[0], High);
+	gpio_output(b.electrovals_pins[1], Low);
+	gpio_output(b.electrovals_pins[2], High);
+	gpio_output(b.electrovals_pins[3], Low);
+}
+
+
+static int pure_capture_main()
+{
+
 	board_conf_t b;
 
 	printf("Comenzamos main\n");
@@ -164,3 +185,7 @@ int main(int argc, char *argv[])
 	}
 }
 
+int main(int argc, char *argv[])
+{
+	gpio_main_simple_test();
+}
