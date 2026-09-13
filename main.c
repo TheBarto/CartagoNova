@@ -51,6 +51,8 @@ static void gpio_main_simple_test()
 
 	int8_t r = read_config_file("file_test.txt", &b);
 
+	init_module();
+
 	for (uint8_t i = 0; i < MAX_TOTAL_ELECTROVALS; i++) {
 		gpio_setup(b.electrovals_pins[i],
 		           Output,
