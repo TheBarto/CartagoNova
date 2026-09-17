@@ -40,7 +40,9 @@ static void gpio_main_simple_test()
 {
 	board_conf_t b;
 
-	memset(&b, 0, sizeof(b));
+    update_gpio_id_value();
+
+    memset(&b, 0, sizeof(b));
 
 	stack_b_init_stack(&b.free_nodes);
 	queue_b_init_queue(&b.capture_config_vals);
@@ -49,7 +51,8 @@ static void gpio_main_simple_test()
 		stack_b_stack_value(&b.free_nodes, &b.nodes[i].node);
 	}
 
-	int8_t r = read_config_file("file_test.txt", &b);
+	//init_module();
+    int8_t r = read_config_file("file_test.txt", &b);
 
 	init_module();
 
@@ -63,9 +66,9 @@ static void gpio_main_simple_test()
 	}
 
 	gpio_output(b.electrovals_pins[0], High);
-	gpio_output(b.electrovals_pins[1], Low);
+	gpio_output(b.electrovals_pins[1], High);
 	gpio_output(b.electrovals_pins[2], High);
-	gpio_output(b.electrovals_pins[3], Low);
+	gpio_output(b.electrovals_pins[3], High);
 }
 
 static int pure_capture_main()

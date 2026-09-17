@@ -74,7 +74,6 @@ int exported_gpios[120] = { GPIO_NOT_EXPORTED };
 int event_occurred[120] = { 0 };
 int thread_running = 0;
 int epfd = -1;
-int fd_export = 0;
 
 static BBIO_err gpio_export(unsigned int gpio)
 {
@@ -109,15 +108,6 @@ static BBIO_err gpio_export(unsigned int gpio)
         return BBIO_OK; // export is not applicable to the USR LED pins
     }
 
-    // Generate the gpio folder writing into the export file
-    if(write(fd_export, gpio, sizeof(unsigned int)) < 0) {
-        printf("Error trying to activate the gpio %d\n", gpio);
-        return -1;
-    }
-
-    // Set a minimun delay to generate the folder
-    usleep(100000);
-
     // already exported by someone else?
     char gpio_path[64];
     snprintf(gpio_path, sizeof(gpio_path), "/sys/class/gpio/gpio%d", gpio);
@@ -141,6 +131,8 @@ static BBIO_err gpio_export(unsigned int gpio)
     len = snprintf(str_gpio, sizeof(str_gpio), "%d", gpio);
     if(write(fd, str_gpio, len) < 0) {
         syslog(LOG_ERR, "Adafruit_BBIO: gpio_export: %u couldn't write \"%s\": %i-%s",
+               gpio, gpio_export, errno, strerror(errno));
+        printf("Adafruit_BBIO: gpio_export: %u couldn't write \"%s\": %i-%s\n",
                gpio, gpio_export, errno, strerror(errno));
         ret =  BBIO_SYSFS;
         goto exit;
@@ -935,11 +927,6 @@ static inline uint8_t init_module(void)
 
 	module_setup = 1;
 
-	// Abrir el fichero export para usar los GPIOs
-	fd_export = open("/sys/class/gpio/export", O_RDWR);
-	if(fd_export == -1)
-		return -1;
-
 	return 0;
 }
 
@@ -1021,7 +1008,7 @@ int8_t gpio_output(char *channel, GPIO_Output output)
 		return err;
 
 	if (!module_setup || gpio_direction[gpio] != OUTPUT) {
-		printf("The GPIO channel has not been setup() as an OUTPUT");
+		printf("The GPIO channel has not been setup() as an OUTPUT\n");
 		return err;
 	}
 

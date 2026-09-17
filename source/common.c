@@ -45,12 +45,17 @@ SOFTWARE.
 
 #include "common.h"
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,1,0)
 #  ifndef BBBVERSION41
 #    define BBBVERSION41
 #  endif
 #endif
+
+#define TOTAL_BBB_PINES 96
 
 int gpio_mode;
 int gpio_direction[120];
@@ -822,4 +827,107 @@ void initlog(int level, const char* ident, int option)
   syslog(LOG_NOTICE, "Adafruit_BBIO: version %s initialized", "<unknown>");
 
   initialized = 1;
+}
+
+int update_gpio_id_value()
+{
+    char directory[] = {"/sys/class/gpio"};
+    char base_file[] = {"/base"};
+
+    DIR* dir = opendir(directory);
+    
+    if(!dir) {
+        printf("Error trying to update GPIO's id numbers. Can not open directory");
+        return -1;
+    }
+
+    uint8_t pos = 0;
+    uint16_t gpio_bases[4] = {0};
+    struct dirent* file = NULL;
+    char directory_name[] = {"gpiochip"};
+    char *pdir = NULL;
+    char *ptr = NULL;
+    while((file = readdir(dir))) {    
+        pdir = directory_name;
+        ptr = file->d_name;
+        while((*ptr) && (*pdir) && (*ptr == *pdir)) {
+            ptr++;
+            pdir++;
+        }
+
+        if((*pdir) /*|| (*ptr)*/) {
+            //printf("HOLA");
+            continue;
+        }
+
+        char final_path[100] = {0};
+        ptr = directory;
+        pdir = final_path;
+        while(*ptr) {
+            *pdir = *ptr;
+            pdir++;
+            ptr++;
+        }
+        *pdir = '/';
+        pdir++;
+
+        ptr = file->d_name;
+        while(*ptr) {
+            *pdir = *ptr;
+            pdir++;
+            ptr++;
+        }
+
+        ptr = base_file;
+        while(*ptr) {
+            *pdir = *ptr;
+            pdir++;
+            ptr++;
+        }
+        
+        printf("%s\n", final_path);
+
+        int8_t base_value[3] = {0};
+        int fd = open(final_path, O_RDONLY);
+        int r = read(fd, &base_value, sizeof(base_value));
+        close(fd);
+        printf("Read %d value, total bytes: %d, from %s\n", base_value, r, final_path);
+
+        uint16_t gpio_base = 0;
+        for(uint8_t i = 0; i < r; i++) {
+            gpio_bases[pos] *= 10;
+            gpio_bases[pos] += (base_value[i] - '0');
+        }
+        pos++;
+    }
+
+    // Ordenar las gpio_bases por orden
+    uint16_t aux = 0;
+    for(uint8_t i = 0; i < pos; i++) {
+        for(uint8_t j = i; j < pos; j++) {
+            if(i == j) {
+                continue;
+            } else if(gpio_bases[i] > gpio_bases[j]) {
+                aux = gpio_bases[j];
+                gpio_bases[j] = gpio_bases[i];
+                gpio_bases[i] = aux;
+            }
+        }
+    }
+
+    // Recalculate the GPIO numbers
+    for(uint8_t i = 0; i < TOTAL_BBB_PINES; i++) {
+        uint8_t gpio_bank = table[i].gpio/32;
+        uint8_t gpio_num = table[i].gpio%32;
+
+        table[i].gpio = gpio_bases[gpio_bank] + gpio_num;
+    }
+
+    for(uint8_t i = 0; i < TOTAL_BBB_PINES; i++) {
+        printf("%d - name: %s / key: %s / gpio: %d / pwm_mux_mode: %d / ain: %d\n",
+                i, table[i].name, table[i].key, table[i].gpio, table[i].pwm_mux_mode,
+                table[i].ain);
+    }
+
+    return 0;
 }

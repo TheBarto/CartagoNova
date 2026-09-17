@@ -130,6 +130,8 @@ int uboot_overlay_enabled(void);
 int beaglebone_blue(void);
 int pocketbeagle(void);
 
+int update_gpio_id_value();
+
 #define BBIO_LOG_OPTION LOG_CONS | LOG_PID | LOG_NDELAY
 void initlog(int level, const char* ident, int option);
 
